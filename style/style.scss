@@ -1,0 +1,98 @@
+@import 'https://fonts.googleapis.com/css2?family=Mulish:ital,wght@0,200..1000;1,200..1000&display=swap';
+
+$font-family: "Mulish", sans-serif;
+
+
+/*-- scss:defaults --*/
+// Base document colors
+$body-bg: #ffffff;
+$link-color: #982D4D;
+$footer-bg: #F1F1FF;
+$body-bg-dark: #383838;
+$white: #ffffff;
+$sage-green: #A1D6C6;
+
+$h1-font-size: 84px !default;
+$h2-font-size: 48px !default;
+
+
+h2 {
+ font-size: $h2-font-size !important;
+}
+
+h1 {
+ font-size: $h1-font-size !important;
+}
+
+li {
+ font-size: 32px;
+}
+
+/*-- scss:rules --*/
+.reveal .slide-logo {
+ display: block;
+ position: fixed;
+ bottom: unset !important;
+ right: unset !important;
+ top: 0px;
+ left: 50px;
+ height: 150px !important;
+ width: 150px !important;
+ max-width: unset !important;
+ max-height: unset !important;
+}
+
+// not working
+.reveal .slide-logo path {
+ fill: black !important;
+}
+
+.reveal .title-slide .slide-logo path {
+ fill: white !important;
+}
+
+
+
+.footnote {
+ font-size: 12px;
+}
+
+.reveal .footer {
+ font-size: 16px;
+}
+
+.reveal .footer-slide {
+ background-color: $footer-bg;
+ display: block;
+}
+
+.reveal .title-slide {
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ margin-left: 0;
+ background-color: $sage-green;
+}
+
+.reveal .title-slide h1 {
+ color: $white;
+ // width: 80vw;
+ // height: 80vh;
+ // display: flex;
+ // align-items: center;
+ // justify-content: center;
+ // margin: 0 auto;
+}
+
+.reveal .slide:not(.title-slide) {
+ background-color: $body-bg;
+}
+
+/*
+.reveal.title-slide h1 {
+ background-color: $body-bg;
+} 
+
+.reveal .title-slide h1 {
+ background-color: $body-bg-dark;
+} */

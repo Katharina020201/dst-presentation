@@ -1,0 +1,21 @@
+Product,Impact Type,Impact,Product Type
+Rice,Land Use,2.15,Plants
+Potatoes,Land Use,0.82,Plants
+Soymilk,Land Use,0.64,Plants
+Tofu,Land Use,3.41,Plants
+Bovine Meat (beef herd),Land Use,170.37,Animal Products
+Bovine Meat (dairy herd),Land Use,25.94,Animal Products
+Pig Meat,Land Use,13.44,Animal Products
+Poultry Meat,Land Use,11.01,Animal Products
+Milk,Land Use,2.1,Animal Products
+Cheese,Land Use,20.18,Animal Products
+Rice,Emissions,3.73,Plants
+Potatoes,Emissions,0.47,Plants
+Soymilk,Emissions,0.91,Plants
+Tofu,Emissions,2.58,Plants
+Bovine Meat (beef herd),Emissions,60.36,Animal Products
+Bovine Meat (dairy herd),Emissions,34.14,Animal Products
+Pig Meat,Emissions,10.57,Animal Products
+Poultry Meat,Emissions,7.52,Animal Products
+Milk,Emissions,2.65,Animal Products
+Cheese,Emissions,18.64,Animal Products

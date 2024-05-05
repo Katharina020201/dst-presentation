@@ -1,0 +1,901 @@
+---
+title: "Produktstrategie für unsere Filialeröffnung"
+subtitle: "Wie können wir uns als Metzgerei nachhaltig positionieren?"
+lang: de
+format: 
+    revealjs:
+        transition: none
+        toc: true 
+        reference-location: document 
+        toc-depth: 1
+        embed-resources: false
+        theme: style/style.scss
+        mainfont: "Mulish"
+        incremental: true
+        logo: images/Logo.svg
+---
+
+```{python}
+
+# setup
+import pandas as pd
+import altair as alt
+from vega_datasets import data
+
+# colors
+dark_grey = "#9698B4"
+sage_green = "#A1D6C6"
+dark_red = "#982D4D"
+blue_highlight = "#6B68F9"
+
+red_scale = ['#F9CEDB', '#C55979',  '#81072B']
+
+# ------------------------------------------- #
+# Pie Chart GHG Emmisions of Food
+
+# creating data for a simple pie chart
+df_food = pd.read_csv(
+    'code/cleaned-data/environmental-impact-food.csv')
+
+# Colors for food and non-food
+df_food['Category'] = df_food['Category'].astype('category')
+
+GHG_TYPE = df_food['Category'].cat.categories.to_list()
+
+colors = alt.Scale(
+    domain=GHG_TYPE,
+    range=[blue_highlight, dark_grey]
+)
+
+# Plot Pie Chart
+pie_base = alt.Chart(df_food).encode(
+    alt.Theta("Percent:Q").stack(True),
+    alt.Color("Category:N", scale=colors).legend(None),
+    alt.Tooltip(['Category', 'Emissions'])
+)
+
+pie = pie_base.mark_arc(outerRadius=120)
+pie_text = pie_base.mark_text(radius=160, size=16).encode(text="Category:N")
+
+# ---------------------------------------- #
+# Meat Consumption in Germany
+
+df_consumption = pd.read_csv(
+    'code/cleaned-data/versorgungsbilanz-fleisch.csv')
+
+# Convert column Year to date time
+df_consumption['Year'] = pd.to_datetime(
+    df_consumption['Year'], format='%Y-%m-%d')
+
+
+# Plotting points and 2 dotted line graphs -> one for max_consumption and one for min_consumption
+# points
+
+# function for points, fill date with either '2011-01-01' or '2021-01-01'
+def create_point(date, p_color):
+
+    point = alt.Chart(df_consumption[df_consumption['Year'] == date]).mark_circle(opacity=1, size=200).encode(
+        x=alt.X('Year:T'),
+        y=alt.Y('Consumption per Person:Q'),
+        color=alt.value(p_color)
+    )
+    return point
+
+
+# function for dotted lines, fill with 'MaxConsumption:Q' or 'MinConsumption:Q'
+def create_dotted_line(column, l_color):
+
+    dotted_line = alt.Chart(df_consumption).mark_rule(strokeDash=[12, 6], size=1).encode(
+        y=alt.Y(column, scale=alt.Scale(domain=(40, 75))),
+        color=alt.value(l_color)
+    )
+    return dotted_line
+
+
+# label for dotted lines
+# Max // adding +kg with the help of Copilot
+label_base_max = alt.Chart(df_consumption).transform_calculate(
+    MaxConsumption_kg="datum.MaxConsumption + ' kg'").mark_text().encode(
+    x=alt.X('Year:T', aggregate='max'),
+    y=alt.Y('MaxConsumption:Q',
+            aggregate={'argmax': 'Year'}),
+    color=alt.value(blue_highlight),
+    text=alt.Text('MaxConsumption_kg:N')
+)
+
+label_max = label_base_max.mark_text(
+    align='left',
+    dx=20,
+    size=20,
+)
+
+
+# Min
+label_base_min = alt.Chart(df_consumption).transform_calculate(
+    MinConsumption_kg="datum.MinConsumption + ' kg'").mark_text().encode(
+    x=alt.X('Year:T', aggregate='max'),
+    y=alt.Y('MinConsumption:Q',
+            aggregate={'argmax': 'Year'}),
+    color=alt.value(blue_highlight),
+    text=alt.Text('MinConsumption_kg:N')
+)
+
+label_min = label_base_min.mark_text(
+    align='left',
+    dx=20,
+    size=20,
+)
+
+
+# Add a new column with text
+df_consumption['consumption_text'] = "- 7.34 kg"
+
+text = alt.Chart(df_consumption).mark_text().encode(
+    x=alt.X('Year:T', aggregate='max'),
+    y=alt.Y('MinConsumption:Q', aggregate={'argmax': 'Year'}),
+    color=alt.value(blue_highlight),
+    text=alt.Text('consumption_text:N')
+)
+
+label_text = text.mark_text(
+    align='left',
+    dx=20,
+    dy=-40,
+    size=30,
+)
+
+
+# Creating an area chart that fills the space between line_min and line_max
+area = alt.Chart(df_consumption).mark_area(opacity=0.2, color=blue_highlight).encode(
+    x='Year:T',
+    y='MinConsumption:Q',
+    y2='MaxConsumption:Q'
+)
+
+
+# plotting the base line_chart
+line_chart = alt.Chart(df_consumption).mark_line(color=blue_highlight).encode(
+    x=alt.X('Year:T').axis(
+        title="Year",
+        titleColor='grey',
+        titleAnchor='start',
+        labelAngle=0,
+        grid=False,
+        tickColor='grey',
+        format='%Y'),
+    y=alt.Y('Consumption per Person').scale(domain=(40, 75)).axis(
+        title='Consumption per Person in kg',
+        titleColor='grey',
+        titleAnchor='end',
+        grid=False,
+        tickColor='grey',
+    ),
+    strokeWidth=alt.value(2)
+).properties(
+    width=750,
+    height=400
+)
+
+# skeleton line chart
+skeleton_chart = line_chart.encode(strokeOpacity=alt.value(0))
+
+
+# -----------------------------------------------------------------------------------#
+# Environmental Impact of Food: Emissions and Land Use per weight
+
+df_weight2 = pd.read_csv('code/cleaned-data/environmental-impact-weight.csv')
+
+# Converting Impact Type and Product Type to Categories
+df_weight2['Impact Type'] = df_weight2['Impact Type'].astype('category')
+df_weight2['Product Type'] = df_weight2['Product Type'].astype('category')
+
+IMPACT_TYPE = df_weight2['Impact Type'].cat.categories.to_list()
+
+impact_colors = alt.Scale(
+    domain=IMPACT_TYPE,
+    range=[dark_red, sage_green,]
+)
+
+PRODUCT_TYPE = df_weight2['Product Type'].cat.categories.to_list()
+
+product_opacity = alt.Scale(
+    domain=PRODUCT_TYPE,
+    range=[0.25, 1]
+)
+
+# Plotting Bar Chart
+
+# Order of the Products
+product_order = ['Bovine Meat (beef herd)', 'Bovine Meat (dairy herd)', 'Cheese',
+                 'Pig Meat', 'Poultry Meat', 'Rice', 'Tofu', 'Milk',  'Soymilk', 'Potatoes']
+
+# plotting Bar chart
+impact_chart = alt.Chart(df_weight2).mark_bar(cornerRadiusTopRight=10, cornerRadiusBottomRight=10).encode(
+    x=alt.X('Impact:Q', scale=alt.Scale(domain=[df_weight2['Impact'].min(), 180])).sort('-y').axis(   # - ist descending
+        labelAngle=0,
+        titleAnchor='start',
+        grid=False,
+        title='Median Impact per 1kg/ 1l'),
+    y=alt.Y('Impact Type:N', title=None).axis(
+        labels=False,
+        titleAnchor='end',
+        grid=False,
+        ticks=False,
+        domain=False),
+    color=alt.Color('Impact Type:N', scale=impact_colors)
+).properties(
+    width=750
+).facet(
+    row=alt.Row('Product:N', sort=product_order, title=None, header=alt.Header(
+        labelAngle=0, labelAlign='left')),
+    spacing=5,
+)
+
+# using the opacity scale for highlighted chart
+impact_highlighted = alt.Chart(df_weight2).mark_bar(cornerRadiusTopRight=10, cornerRadiusBottomRight=10).encode(
+    x=alt.X('Impact:Q', scale=alt.Scale(domain=[df_weight2['Impact'].min(), 180])).sort('-y').axis(   # - ist descending
+        labelAngle=0,
+        titleAnchor='start',
+        grid=False,
+        title='Median Impact per 1kg/ 1l'),
+    opacity=alt.Opacity('Product Type:N', scale=product_opacity, legend=None),
+    y=alt.Y('Impact Type:N', title=None).axis(
+        labels=False,
+        titleAnchor='end',
+        grid=False,
+        ticks=False,
+        domain=False),
+    color=alt.Color('Impact Type:N', scale=impact_colors)
+).properties(
+    width=750
+).facet(
+    row=alt.Row('Product:N', sort=product_order, title=None, header=alt.Header(
+        labelAngle=0, labelAlign='left')),
+    spacing=5,
+)
+
+impact_skeleton = alt.Chart(df_weight2).mark_bar().encode(
+    x=alt.X(scale=alt.Scale(domain=[df_weight2['Impact'].min(), 180])).sort('-y').axis(   # - ist descending
+        labelAngle=0,
+        titleAnchor='start'),
+    opacity=alt.value(0),
+    y=alt.Y('Impact Type:N', title=None).axis(
+        labels=False,
+        titleAnchor='end',
+        grid=False,
+        ticks=False),
+    color=alt.Color('Impact Type:N', scale=impact_colors)
+).properties(
+    width=750
+).facet(
+    row=alt.Row('Product:N', sort=product_order, title=None, header=alt.Header(
+        labelAngle=0, labelAlign='left')),
+    spacing=5,
+)
+
+# ----------------------------------------------------------------------------------#
+# Environmental Impact of Food: Emissions per 100g Protein
+
+df_nu = pd.read_csv('code/cleaned-data/environmental-impact-nu.csv')
+
+df_nu['Product'] = df_nu['Product'].astype('category')
+
+
+# defining color and opacity ranges
+df_nu['Product Type'] = df_nu['Product Type'].astype('category')
+
+PRODUCT_TYPE_NU = df_nu['Product Type'].cat.categories.to_list()
+
+product_colors = alt.Scale(
+    domain=PRODUCT_TYPE_NU,
+    range=[dark_red, sage_green]
+)
+
+# New opaticity range for the comparison, using Column Compare
+df_nu['Compare'] = df_nu['Compare'].astype('category')
+
+COMPARE = df_nu['Compare'].cat.categories.to_list()
+
+product_opacity2 = alt.Scale(
+    domain=COMPARE,
+    range=[0.2, 1]
+)
+
+# points for mean value
+median_points = alt.Chart(df_nu).mark_point(filled=False, color='black', size=200).encode(
+    x=alt.X('Median:Q'),
+    y=alt.Y('Product:N'),
+    tooltip=['Median:Q', 'Product:N']
+)
+
+# points for mean value - highlighted for comparison
+median_points_highlighted = alt.Chart(df_nu).mark_point(filled=False, color='black', size=200).encode(
+    x=alt.X('Median:Q'),
+    opacity=alt.Opacity('Compare:N', scale=product_opacity2, legend=None),
+    y=alt.Y('Product:N'),
+    tooltip=['Median:Q', 'Product:N']
+)
+
+
+# Get the '5th pctl' value of 'Bovine Meat (dairy herd)'
+bovine_dairy_5th = df_nu.loc[df_nu['Product'] ==
+                             'Bovine Meat (dairy herd)', '5th pctl'].values[0]
+
+# Create a new chart for vertical line
+vline = alt.Chart().mark_rule(color='black', strokeDash=[12, 6]).encode(
+    x='a:Q'
+).transform_calculate(
+    a=str(bovine_dairy_5th)
+)
+
+# plotting range bar chart
+# base -> bars are grey
+bar_nu = alt.Chart(df_nu).mark_bar(cornerRadius=10, height=20, color=dark_grey).encode(
+    x=alt.X('5th pctl:Q').scale(domain=[0, 140]).title(
+        'GHG Emissions (kg CO2eq)'),
+    x2='95th pctl:Q',
+    y=alt.Y('Product:N', axis=alt.Axis(
+        title='Per 100g protein...', titleAngle=0, titleY=-5)),
+).properties(
+    width=720,
+    height=500
+)
+
+# highlighted -> product_colors are applied
+bar_nu_highlighted = alt.Chart(df_nu).mark_bar(cornerRadius=10, height=20).encode(
+    x=alt.X('5th pctl:Q').scale(domain=[0, 140]).title(
+        'GHG Emissions (kg CO2eq)'),
+    x2='95th pctl:Q',
+    y=alt.Y('Product:N', axis=alt.Axis(
+        title='Per 100g protein...', titleAngle=0, titleY=-5)),
+    color=alt.Color('Product Type:N', scale=product_colors),
+).properties(
+    width=720,
+    height=500
+)
+
+# final -> product_colors and opacity are applied
+bar_nu_final = alt.Chart(df_nu).mark_bar(cornerRadius=10, height=20).encode(
+    x=alt.X('5th pctl:Q').scale(domain=[0, 140]).title(
+        'GHG Emissions (kg CO2eq)'),
+    x2='95th pctl:Q',
+    y=alt.Y('Product:N', axis=alt.Axis(
+        title='Per 100g protein...', titleAngle=0, titleY=-5)),
+    color=alt.Color('Product Type:N', scale=product_colors),
+    opacity=alt.Opacity('Compare:N', scale=product_opacity2, legend=None)
+).properties(
+    width=720,
+    height=500
+)
+
+
+# -------------------------------------------------#
+# Alternative Protein Companies
+
+df_founded = pd.read_csv('code/cleaned-data/alt-protein-founded.csv')
+
+# Convert column Year to date time
+df_founded['Year Founded'] = pd.to_datetime(
+    df_founded['Year Founded'], format='%Y-%m-%d')
+
+
+founded_chart = alt.Chart(df_founded).mark_line(color=blue_highlight).encode(
+    x=alt.X('Year Founded').axis(
+        title="Year",
+        titleColor='grey',
+        titleAnchor='start',
+        labelAngle=0,
+        grid=False,
+        tickColor='grey',
+        format='%Y'),
+    y=alt.Y('Number of Companies Founded').axis(
+        title='Number of Companies Founded',
+        titleColor='grey',
+        titleAnchor='end',
+        grid=False,
+        tickColor='grey',
+    ),
+    strokeWidth=alt.value(2)
+).properties(
+    width=750,
+    height=400
+)
+
+
+# point for highest founding-rate of alt-protein companies
+# df_founded['Year'] = df_founded['Year Founded'].dt.year
+
+founded_point = alt.Chart(df_founded[df_founded['Year_int'] == 2019]).mark_circle(opacity=1, size=200).encode(
+    x=alt.X('Year Founded:T'),
+    y=alt.Y('Number of Companies Founded:Q'),
+    color=alt.value(blue_highlight)
+)
+
+# label for highest founding-rate (in 2019)
+label_2019_base = alt.Chart(df_founded[df_founded['Year_int'] == 2019]).mark_text().encode(
+    x=alt.X('Year Founded:T'),
+    y=alt.Y('Number of Companies Founded:Q'),
+    color=alt.value(blue_highlight),
+    text=alt.Text('Number of Companies Founded:Q')
+)
+
+label_2019 = label_2019_base.mark_text(
+    align='left',
+    dx=-55,
+    size=20,
+)
+
+
+# merge df_consumption and df_founded where "Year" == "Year Founded"
+
+# Merge the dataframes
+df_merged = pd.merge(df_consumption, df_founded,
+                     left_on='Year', right_on='Year Founded')
+
+# delete column Year Foounded, otherwise it is double
+df_merged = df_merged.drop('Year Founded', axis=1)
+
+df_merged['Year'] = pd.to_datetime(df_merged['Year'], format='%Y-%m-%d')
+
+# create double axis chart like https://altair-viz.github.io/gallery/layered_chart_with_dual_axis.html, using df_merged
+base = alt.Chart(df_merged).encode(
+    x=alt.X('Year:T').axis(
+        title="Year",
+        titleColor='grey',
+        titleAnchor='start',
+        labelAngle=0,
+        grid=False,
+        tickColor='grey',
+        format='%Y'),
+    strokeWidth=alt.value(2)
+).properties(
+    width=750,
+    height=400
+)
+
+line_consumption = base.mark_line(stroke=dark_red).encode(
+    x=alt.X('Year:T').axis(
+        grid=False,
+        titleColor='grey',
+        titleAnchor='start'),
+    y=alt.Y('Consumption per Person:Q').scale(domain=(40, 75)).axis(
+        title='Consumption of Meat per Person in Germany (kg)',
+        titleColor=dark_red,
+        grid=False,
+        titleAnchor='end',
+        titleAngle=270,
+        titleX=50,
+    )
+)
+
+line_founded = base.mark_line(stroke=blue_highlight).encode(
+    x=alt.X('Year:T').axis(
+        grid=False,
+        titleColor='grey',
+        titleAnchor='start'),
+    y=alt.Y('Number of Companies Founded:Q').axis(
+        title='Number of Companies Founded',
+        titleColor=blue_highlight,
+        grid=False,
+        titleAnchor='end'
+    )
+)
+
+# -------------------------------------------------#
+# Alternative Protein Companies - COUNTRIES
+
+df_country = pd.read_csv('code/cleaned-data/alt-protein-country.csv')
+
+## ----!!! Source: https://github.com/bast/altair-geographic-plots/blob/main/choropleth.ipynb  ---- ##
+
+countries = alt.topo_feature(data.world_110m.url, "countries")
+# https://en.wikipedia.org/wiki/ISO_3166-1_numeric
+country_codes = pd.read_csv(
+    "https://raw.githubusercontent.com/lukes/ISO-3166-Countries-with-Regional-Codes/master/all/all.csv"
+)
+
+background = alt.Chart(countries).mark_geoshape(fill="lightgray")
+
+# we transform twice, first from "ISO 3166-1 numeric" to name, then from name to value
+foreground = (
+    alt.Chart(countries)
+    .mark_geoshape()
+    .transform_lookup(
+        lookup="id",
+        from_=alt.LookupData(data=country_codes,
+                             key="country-code", fields=["name"]),
+    )
+    .transform_lookup(
+        lookup="name",
+        from_=alt.LookupData(data=df_country, key="name", fields=[
+                             "Number of Companies per Country"]),
+    )
+    .encode(
+        fill=alt.Color(
+            "Number of Companies per Country:Q",
+            scale=alt.Scale(range=red_scale),
+            title="Number of Companies"
+        ),
+        tooltip=[alt.Tooltip('name:N', title='Country'), alt.Tooltip(
+            'Number of Companies per Country:Q', title='Number of Companies')]
+    )
+)
+
+chart_map = (
+    (background + foreground)
+    .properties(width=700, height=500)
+    .project(
+        type="equalEarth",
+        scale=800,
+        translate=[200, 1000],
+    )
+)
+
+
+```
+
+
+
+# Herausforderung: Kundenaquise und Brand Image
+
+# Verantworung übernehmen: Wir und Nachhaltigkeit
+
+## 23% der weltweiten Treibhausgas-Emmisionen werden von Lebensmitteln verursacht ^[Poore & Nemecek, 2018]
+```{python}
+# | echo: false
+
+# show Pie Chart
+pie_chart = pie + pie_text
+pie_chart
+```
+
+
+## Tierische Produkte wirken sich schlechter auf die Umwelt aus 
+```{python}
+# | echo: false
+
+# show Bar Chart
+impact_skeleton
+```
+
+## Tierische Produkte wirken sich schlechter auf die Umwelt aus 
+```{python}
+# | echo: false
+
+# show Bar Chart
+impact_chart
+```
+
+## Tierische Produkte wirken sich schlechter auf die Umwelt aus 
+```{python}
+# | echo: false
+
+# show Bar Chart
+impact_highlighted
+
+```
+
+## Auch die Emissionen per 100g Protein sind bei pflanzlichen Produkten niedriger 
+```{python}
+# | echo: false
+
+# show Bar Chart
+bar_nu + median_points
+
+```
+
+## Auch die Emissionen per 100g Protein sind bei pflanzlichen Produkten niedriger 
+```{python}
+# | echo: false
+
+
+# show Bar Chart
+bar_nu_highlighted + median_points
+
+```
+
+## Auch die Emissionen per 100g Protein sind bei pflanzlichen Produkten niedriger 
+```{python}
+# | echo: false
+
+
+# show Bar Chart + vertical line
+bar_nu_final + median_points_highlighted + vline
+
+```
+
+## Fleischkonsum in Deutschland __fällt__ seit 2011 stetig ^[Bundesminesterium für Ernährung und Landwirtschaft]
+```{python}
+# | echo: false
+
+alt.layer(skeleton_chart).configure_view(
+    strokeWidth=0
+).configure_title(
+    fontSize=20,
+    font='Arial',
+    anchor='start',
+    fontWeight='normal',
+    color='grey'
+).configure_axis(
+    labelFont='Arial',
+    titleFont='Arial',
+    labelFontSize=14,
+    titleFontSize=14,
+    titleFontWeight='normal',
+    titleColor='grey'
+)
+
+
+```
+
+## Fleischkonsum in Deutschland __fällt__ seit 2011 stetig 
+```{python}
+# | echo: false
+
+# line chart with line 
+alt.layer(line_chart).configure_view(
+    strokeWidth=0
+).configure_title(
+    fontSize=20,
+    font='Arial',
+    anchor='start',
+    fontWeight='normal',
+    color='grey'
+).configure_axis(
+    labelFont='Arial',
+    titleFont='Arial',
+    labelFontSize=14,
+    titleFontSize=14,
+    titleFontWeight='normal',
+    titleColor='grey'
+)
+
+
+```
+
+## Fleischkonsum in Deutschland __fällt__ seit 2011 stetig 
+```{python}
+# | echo: false
+
+line_chart = line_chart.mark_line(color=dark_grey)
+
+# line chart with grey line and blue point
+alt.layer(line_chart, create_point('2011-01-01', blue_highlight)).configure_view(
+    strokeWidth=0
+).configure_title(
+    fontSize=20,
+    font='Arial',
+    anchor='start',
+    fontWeight='normal',
+    color='grey'
+).configure_axis(
+    labelFont='Arial',
+    titleFont='Arial',
+    labelFontSize=14,
+    titleFontSize=14,
+    titleFontWeight='normal',
+    titleColor='grey'
+)
+
+
+```
+
+## Fleischkonsum in Deutschland __fällt__ seit 2011 stetig 
+```{python}
+# | echo: false
+
+# show Chart
+alt.layer(line_chart, create_point('2011-01-01', blue_highlight), create_dotted_line('MaxConsumption:Q', blue_highlight), label_max).configure_view(
+    strokeWidth=0
+).configure_title(
+    fontSize=20,
+    font='Arial',
+    anchor='start',
+    fontWeight='normal',
+    color='grey'
+).configure_axis(
+    labelFont='Arial',
+    titleFont='Arial',
+    labelFontSize=14,
+    titleFontSize=14,
+    titleFontWeight='normal',
+    titleColor='grey'
+)
+
+
+```
+
+## Fleischkonsum in Deutschland __fällt__ seit 2011 stetig 
+```{python}
+# | echo: false
+
+label_base_max = label_base_max.encode(color=alt.value(dark_grey))
+
+label_max = label_base_max.mark_text(
+    align='left',
+    dx=20,
+    size=20,
+)
+
+# show Chart with 2 point and both dotted lines
+alt.layer(line_chart, create_point('2011-01-01', dark_grey), create_dotted_line('MaxConsumption:Q', dark_grey), create_point('2021-01-01', blue_highlight), label_max).configure_view(
+    strokeWidth=0
+).configure_title(
+    fontSize=20,
+    font='Arial',
+    anchor='start',
+    fontWeight='normal',
+    color='grey'
+).configure_axis(
+    labelFont='Arial',
+    titleFont='Arial',
+    labelFontSize=14,
+    titleFontSize=14,
+    titleFontWeight='normal',
+    titleColor='grey'
+)
+
+
+```
+
+## Fleischkonsum in Deutschland __fällt__ seit 2011 stetig 
+```{python}
+# | echo: false
+
+# show Chart
+alt.layer(line_chart, create_point('2011-01-01', dark_grey), create_dotted_line('MaxConsumption:Q', dark_grey), create_point('2021-01-01', blue_highlight), create_dotted_line('MinConsumption:Q', blue_highlight), label_max, label_min).configure_view(
+    strokeWidth=0
+).configure_title(
+    fontSize=20,
+    font='Arial',
+    anchor='start',
+    fontWeight='normal',
+    color='grey'
+).configure_axis(
+    labelFont='Arial',
+    titleFont='Arial',
+    labelFontSize=14,
+    titleFontSize=14,
+    titleFontWeight='normal',
+    titleColor='grey'
+)
+
+
+```
+
+## Fleischkonsum in Deutschland __fällt__ seit 2011 stetig 
+```{python}
+# | echo: false
+
+# show Chart
+alt.layer(line_chart, area, create_dotted_line('MaxConsumption:Q', blue_highlight), create_dotted_line('MinConsumption:Q', blue_highlight), label_text).configure_view(
+    strokeWidth=0
+).configure_title(
+    fontSize=20,
+    font='Arial',
+    anchor='start',
+    fontWeight='normal',
+    color='grey'
+).configure_axis(
+    labelFont='Arial',
+    titleFont='Arial',
+    labelFontSize=14,
+    titleFontSize=14,
+    titleFontWeight='normal',
+    titleColor='grey'
+)
+
+
+```
+
+## Unternehmen, die Fleischersatzprodukte produzieren in Deutschland und der UK weit verbreitet ^[Good Food Institute]
+```{python}
+# | echo: false
+
+
+chart_map
+
+
+```
+
+## Gründungszahlen von Unternehmen, die pflanzliches Protein verarbeiten __steigen__ 
+```{python}
+# | echo: false
+
+
+# show Chart
+alt.layer(founded_chart).configure_view(
+    strokeWidth=0
+).configure_title(
+    fontSize=20,
+    font='Arial',
+    anchor='start',
+    fontWeight='normal',
+    color='grey'
+).configure_axis(
+    labelFont='Arial',
+    titleFont='Arial',
+    labelFontSize=14,
+    titleFontSize=14,
+    titleFontWeight='normal',
+    titleColor='grey'
+)
+
+
+```
+
+## 2019 wurden weltweit 109 Unternehmen, spezialisiert auf pflanzliche Fleischalternativen, gegründet 
+```{python}
+# | echo: false
+
+# make line grey
+founded_chart = founded_chart.mark_line(color=dark_grey)
+
+# show Chart
+alt.layer(founded_chart, founded_point, label_2019).configure_view(
+    strokeWidth=0
+).configure_title(
+    fontSize=20,
+    font='Arial',
+    anchor='start',
+    fontWeight='normal',
+    color='grey'
+).configure_axis(
+    labelFont='Arial',
+    titleFont='Arial',
+    labelFontSize=14,
+    titleFontSize=14,
+    titleFontWeight='normal',
+    titleColor='grey'
+)
+
+
+```
+
+## Trend: Weniger Fleisch, mehr pflanzliche Alternativen 
+```{python}
+# | echo: false
+
+
+alt.layer(line_founded, line_consumption).configure_view(
+    strokeWidth=0
+).configure_title(
+    fontSize=20,
+    font='Arial',
+    anchor='start',
+    fontWeight='normal',
+).configure_axis(
+    labelFont='Arial',
+    titleFont='Arial',
+    labelFontSize=14,
+    titleFontSize=14,
+    titleFontWeight='normal',
+).resolve_scale(
+    y='independent'
+)
+
+
+
+```
+
+
+# Empfehlung und Ausblick 
+
+## Erkenntnisse: Was sagen uns die Daten?
+- Pflanzliche Produkte sind durchgehend __besser__ für die Umwelt als tierische Produkte 
+- Der __Fleischkonsum__ pro Kopf in Deutschland __sinkt seit 2011__
+- Der Markt für alternative, pflanzliche Produkte wird immer größer
+
+## Empfehlung: 1/2 des Sortiments mit pflanzlichen Alternativen 
+
+- Metzgerei und vegan? Widerspruch sorgt für mediale Aufsicht
+- __Nachhaltigkeit als Kaufargument__ und zunehmend wichtigem Entscheidungsfaktor bei den Kunden
+- Absetzung von der Konkurrenz 
+
+
+## Ausblick: __Testphase__ mit veganem Sortiment
+
+- Weitere Daten zum Kaufverhalten unserer Kunden sammeln
+- Verkaufszahlen beobachten und dokumentieren  
+- Kundenumfragen durchführen 
+

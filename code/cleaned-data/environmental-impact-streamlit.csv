@@ -1,0 +1,49 @@
+Product,Impact Type,Impact,Product Type
+Rice,Land Use,2.15,Plants
+Potatoes,Land Use,0.82,Plants
+Peas,Land Use,6.73,Plants
+Soymilk,Land Use,0.64,Plants
+Tofu,Land Use,3.41,Plants
+Olive Oil,Land Use,17.29,Plants
+Tomatoes,Land Use,0.17,Plants
+Bovine Meat (beef herd),Land Use,170.37,Animal Products
+Bovine Meat (dairy herd),Land Use,25.94,Animal Products
+Lamb & Mutton,Land Use,127.41,Animal Products
+Pig Meat,Land Use,13.44,Animal Products
+Poultry Meat,Land Use,11.01,Animal Products
+Milk,Land Use,2.1,Animal Products
+Cheese,Land Use,20.18,Animal Products
+Fish (farmed),Land Use,5.6,Animal Products
+Crustaceans (farmed),Land Use,0.82,Animal Products
+Rice,Emissions,3.73,Plants
+Potatoes,Emissions,0.47,Plants
+Peas,Emissions,0.8,Plants
+Soymilk,Emissions,0.91,Plants
+Tofu,Emissions,2.58,Plants
+Olive Oil,Emissions,5.09,Plants
+Tomatoes,Emissions,0.65,Plants
+Bovine Meat (beef herd),Emissions,60.36,Animal Products
+Bovine Meat (dairy herd),Emissions,34.14,Animal Products
+Lamb & Mutton,Emissions,40.61,Animal Products
+Pig Meat,Emissions,10.57,Animal Products
+Poultry Meat,Emissions,7.52,Animal Products
+Milk,Emissions,2.65,Animal Products
+Cheese,Emissions,18.64,Animal Products
+Fish (farmed),Emissions,7.89,Animal Products
+Crustaceans (farmed),Emissions,14.71,Animal Products
+Rice,Water Use,4625.6,Plants
+Potatoes,Water Use,78.3,Plants
+Peas,Water Use,0.0,Plants
+Soymilk,Water Use,6.2,Plants
+Tofu,Water Use,32.4,Plants
+Olive Oil,Water Use,24395.7,Plants
+Tomatoes,Water Use,4480.7,Plants
+Bovine Meat (beef herd),Water Use,441.2,Animal Products
+Bovine Meat (dairy herd),Water Use,122176.8,Animal Products
+Lamb & Mutton,Water Use,258.9,Animal Products
+Pig Meat,Water Use,54242.7,Animal Products
+Poultry Meat,Water Use,333.5,Animal Products
+Milk,Water Use,9776.4,Animal Products
+Cheese,Water Use,80463.1,Animal Products
+Fish (farmed),Water Use,8483.4,Animal Products
+Crustaceans (farmed),Water Use,48737.6,Animal Products
